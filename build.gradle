@@ -6,7 +6,11 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-beta6'
+        classpath 'com.android.tools.build:gradle:3.6.1'
     }
 
+}
+
+repositories {
+    google()
 }
