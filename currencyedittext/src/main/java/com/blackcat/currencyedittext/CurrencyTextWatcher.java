@@ -46,10 +46,15 @@ class CurrencyTextWatcher implements TextWatcher {
             newText = (editText.areNegativeValuesAllowed()) ? newText.replaceAll("[^0-9/-]", "") : newText.replaceAll("[^0-9]", "");
             if(!newText.equals("") && !newText.equals("-")){
                 //Store a copy of the raw input to be retrieved later by getRawValue
-                editText.setRawValue(Long.valueOf(newText));
+                try {
+                    editText.setRawValue(Long.valueOf(newText));
+                } catch (NumberFormatException exception) {
+                    newText = newText.subSequence(0, newText.length() - 1).toString();
+                }
+
             }
             try{
-                textToDisplay = CurrencyTextFormatter.formatText(newText, editText.getLocale(), editText.getDefaultLocale(), editText.getDecimalDigits());
+                textToDisplay = CurrencyTextFormatter.formatText(newText, editText.getLocale(), editText.getDefaultLocale(), editText.getDecimalDigits(), editText.getCurrencyFormatter(), editText.isShowCurrencySymbol());
             }
             catch(IllegalArgumentException exception){
                 textToDisplay = lastGoodInput;

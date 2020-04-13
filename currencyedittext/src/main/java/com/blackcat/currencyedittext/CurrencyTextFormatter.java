@@ -12,14 +12,42 @@ public final class CurrencyTextFormatter {
     private CurrencyTextFormatter(){}
 
     public static String formatText(String val, Locale locale){
-        return formatText(val, locale, Locale.US, null);
+        return formatText(val, locale, Locale.US, null, null, true);
+    }
+
+    public static String formatText(String val, Locale locale, Integer decimalDigits){
+        return formatText(val, locale, Locale.US, decimalDigits, null, true);
+    }
+
+    public static String formatText(String val, Locale locale, Integer decimalDigits, Boolean showCurrencySymbol){
+        return formatText(val, locale, Locale.US, decimalDigits, null, showCurrencySymbol);
+    }
+
+    public static String formatText(String val, Locale locale, Boolean showCurrencySymbol){
+        return formatText(val, locale, Locale.US, null, null, showCurrencySymbol);
+    }
+
+    public static String formatText(String val, Locale locale, DecimalFormat currencyFormatter){
+        return formatText(val, locale, Locale.US, null, currencyFormatter, true);
+    }
+
+    public static String formatText(String val, Locale locale, DecimalFormat currencyFormatter, Boolean showCurrencySymbol){
+        return formatText(val, locale, Locale.US, null, currencyFormatter, showCurrencySymbol);
     }
 
     public static String formatText(String val, Locale locale, Locale defaultLocale){
-        return formatText(val, locale, defaultLocale, null);
+        return formatText(val, locale, defaultLocale, null, null, true);
     }
 
-    public static String formatText(String val, Locale locale, Locale defaultLocale, Integer decimalDigits){
+    public static String formatText(String val, Locale locale, Locale defaultLocale, Boolean showCurrencySymbol){
+        return formatText(val, locale, defaultLocale, null, null, showCurrencySymbol);
+    }
+
+    public static String formatText(String val, Locale locale, Locale defaultLocale, DecimalFormat currencyFormatter){
+        return formatText(val, locale, defaultLocale, null, currencyFormatter, true);
+    }
+
+    public static String formatText(String val, Locale locale, Locale defaultLocale, Integer decimalDigits, DecimalFormat currencyFormatter, Boolean showCurrencySymbol){
         //special case for the start of a negative number
         if(val.equals("-")) return val;
 
@@ -37,17 +65,18 @@ public final class CurrencyTextFormatter {
             }
         }
 
-        DecimalFormat currencyFormatter;
-        try {
-            currencyFormatter = (DecimalFormat) DecimalFormat.getCurrencyInstance(locale);
-        } catch (Exception e) {
+        if (currencyFormatter == null) {
             try {
-                Log.e("CurrencyTextFormatter", "Error detected for locale: " + locale + ", falling back to default value: " + defaultLocale);
-                currencyFormatter = (DecimalFormat) DecimalFormat.getCurrencyInstance(defaultLocale);
-            }
-            catch(Exception e1){
-                Log.e("CurrencyTextFormatter", "Error detected for defaultLocale: " + defaultLocale + ", falling back to USD.");
-                currencyFormatter = (DecimalFormat) DecimalFormat.getCurrencyInstance(Locale.US);
+                currencyFormatter = (DecimalFormat) DecimalFormat.getCurrencyInstance(locale);
+            } catch (Exception e) {
+                try {
+                    Log.e("CurrencyTextFormatter", "Error detected for locale: " + locale + ", falling back to default value: " + defaultLocale);
+                    currencyFormatter = (DecimalFormat) DecimalFormat.getCurrencyInstance(defaultLocale);
+                }
+                catch(Exception e1){
+                    Log.e("CurrencyTextFormatter", "Error detected for defaultLocale: " + defaultLocale + ", falling back to USD.");
+                    currencyFormatter = (DecimalFormat) DecimalFormat.getCurrencyInstance(Locale.US);
+                }
             }
         }
 
@@ -80,10 +109,21 @@ public final class CurrencyTextFormatter {
 
             //finally, do the actual formatting
             currencyFormatter.setMinimumFractionDigits(currencyDecimalDigits);
+            if (showCurrencySymbol) {
+                String symbol = Currency.getInstance(locale).getSymbol(locale);
+                currencyFormatter.setGroupingUsed(true);
+                currencyFormatter.setPositivePrefix(symbol + " ");
+                currencyFormatter.setNegativePrefix("-" + symbol + " ");
+            } else {
+                currencyFormatter.setGroupingUsed(true);
+                currencyFormatter.setPositivePrefix("");
+                currencyFormatter.setNegativePrefix("-");
+            }
             val = currencyFormatter.format(newTextValue);
         }
         else {
-            throw new IllegalArgumentException("Invalid amount of digits found (either zero or too many) in argument val");
+            val = currencyFormatter.format(0);
+//            throw new IllegalArgumentException("Invalid amount of digits found (either zero or too many) in argument val");
         }
         return val;
     }

@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.EditText;
 
+import java.text.DecimalFormat;
 import java.util.Currency;
 import java.util.Locale;
 
@@ -16,6 +17,10 @@ public class CurrencyEditText extends EditText {
     private Locale currentLocale;
 
     private Locale defaultLocale = Locale.US;
+
+    private DecimalFormat currencyFormatter;
+
+    private Boolean showCurrencySymbol = true;
 
     private boolean allowNegativeValues = false;
 
@@ -29,8 +34,14 @@ public class CurrencyEditText extends EditText {
     /*
     PUBLIC METHODS
      */
-    public CurrencyEditText(Context context, AttributeSet attrs) {
+    public CurrencyEditText(Context context, AttributeSet attrs, Locale locale) {
         super(context, attrs);
+        if(locale != null) {
+            currentLocale = locale;
+        } else {
+            currentLocale = retrieveLocale();
+        }
+
         init();
         processAttributes(context, attrs);
     }
@@ -100,6 +111,24 @@ public class CurrencyEditText extends EditText {
      */
     public void setLocale(Locale locale){
         currentLocale = locale;
+        refreshView();
+    }
+
+    public DecimalFormat getCurrencyFormatter() {
+        return currencyFormatter;
+    }
+
+    public void setCurrencyFormatter(DecimalFormat currencyFormatter) {
+        this.currencyFormatter = currencyFormatter;
+        refreshView();
+    }
+
+    public Boolean isShowCurrencySymbol() {
+        return showCurrencySymbol;
+    }
+
+    public void setShowCurrencySymbol(Boolean showCurrencySymbol) {
+        this.showCurrencySymbol = showCurrencySymbol;
         refreshView();
     }
 
@@ -212,17 +241,16 @@ public class CurrencyEditText extends EditText {
     }
 
     private String format(long val){
-        return CurrencyTextFormatter.formatText(String.valueOf(val), currentLocale, defaultLocale, decimalDigits);
+        return CurrencyTextFormatter.formatText(String.valueOf(val), currentLocale, defaultLocale, decimalDigits, currencyFormatter, showCurrencySymbol);
     }
 
     private String format(String val){
-        return CurrencyTextFormatter.formatText(val, currentLocale, defaultLocale, decimalDigits);
+        return CurrencyTextFormatter.formatText(val, currentLocale, defaultLocale, decimalDigits, currencyFormatter, showCurrencySymbol);
     }
 
     private void init(){
         this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
 
-        currentLocale = retrieveLocale();
         Currency currentCurrency = getCurrencyForLocale(currentLocale);
         decimalDigits = currentCurrency.getDefaultFractionDigits();
         initCurrencyTextWatcher();
@@ -243,6 +271,7 @@ public class CurrencyEditText extends EditText {
 
         this.setAllowNegativeValues(array.getBoolean(R.styleable.CurrencyEditText_allow_negative_values, false));
         this.setDecimalDigits(array.getInteger(R.styleable.CurrencyEditText_decimal_digits, decimalDigits));
+        this.setShowCurrencySymbol(array.getBoolean(R.styleable.CurrencyEditText_show_currency_symbol, showCurrencySymbol));
 
         array.recycle();
     }
